@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="SBC1_JMS_CHICKEN" default="compile" basedir=".">
+    
+    <property environment="env"/>
+    <property name="glassfish.home" value="${env.GLASSFISH_HOME}"/>
+
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+	<property name="libGlobal.dir" value="../sbc1_global/lib"/>
+	<property name="distGlobal.dir" value="../sbc1_global/dist"/>
+    
+    <path id="classpath">
+        <fileset dir="${glassfish.home}/lib">
+            <include name="javaee.jar"/>
+            <include name="appserv-rt.jar"/>
+        </fileset>
+		<fileset dir="${libGlobal.dir}" includes="**/*.jar" />
+		<fileset dir="${distGlobal.dir}" includes="**/*.jar" />
+    	<pathelement location="${build.dir}"/>
+    </path>
+    
+    <target name="compile">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}"
+               destdir="${build.dir}"
+               debug="on"
+               deprecation="on"
+               classpathref="classpath"/>
+		<copy file="${src.dir}/log4j.properties" tofile="${build.dir}/log4j.properties"/>
+    </target>
+
+	<target name="run-admin" depends="compile">
+	        <java classname="sbc.admin.Admin" 
+	              fork="true"
+	              classpathref="classpath">
+			</java>
+	    </target>
+	
+	<!-- PRODUCER (started via GUI) -->
+	
+    <target name="run-chicken" depends="compile">
+        <java classname="sbc.producer.Chicken" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="1 3"/>
+		</java>
+    </target>
+
+    <target name="run-chocolate" depends="compile">
+        <java classname="sbc.producer.ChocolateRabbitRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="2 3"/>
+		</java>
+    </target>
+
+	
+	<!-- WORKER (can not be started via GUI) -->
+    <target name="run-colorRabbit" depends="compile">
+        <java classname="sbc.worker.ColorRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="1 RED"/>
+		</java>
+    </target>
+	
+    <target name="run-colorRabbit2" depends="compile">
+        <java classname="sbc.worker.ColorRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="2 GREEN"/>
+		</java>
+    </target>
+	
+    <target name="run-buildRabbit" depends="compile">
+        <java classname="sbc.worker.BuildRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="3"/>
+		</java>
+    </target>
+	
+    <target name="run-buildRabbit2" depends="compile">
+        <java classname="sbc.worker.BuildRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="4"/>
+		</java>
+    </target>
+	
+    <target name="run-logisticRabbit" depends="compile">
+        <java classname="sbc.worker.LogisticRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="5"/>
+		</java>
+    </target>
+	
+    <target name="run-logisticRabbit2" depends="compile">
+        <java classname="sbc.worker.LogisticRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="6"/>
+		</java>
+    </target>
+	
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+    
+</project>
