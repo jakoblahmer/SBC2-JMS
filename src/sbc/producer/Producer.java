@@ -7,6 +7,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.InitialContext;
@@ -26,6 +27,8 @@ public abstract class Producer extends Thread {
 	protected int id;
 	protected double failureRate;
 	protected String prefix;
+	protected Queue guiQueue;
+	protected QueueSender guiProducer;
 	
 	public Producer(String[] args)	{
 		this.parseArgs(args);
@@ -99,6 +102,26 @@ public abstract class Producer extends Thread {
 		}
 	}
 
+	
+	/**
+	 * inits the gui producer
+	 */
+	protected void initGUIProducer()	{
+		try {
+			guiQueue = (Queue) ctx.lookup(prefix + "." + "gui.queue");
+			
+			guiProducer = (QueueSender) session.createProducer(guiQueue);
+			
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	protected void close() {
 		try {
 			this.producer.close();

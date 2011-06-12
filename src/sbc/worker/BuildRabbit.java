@@ -48,7 +48,9 @@ public class BuildRabbit extends Worker {
 
 	public BuildRabbit(String[] args)	{
 		super(args);
+		
 		this.initProducer("test.queue");
+		this.initGUIProducer();
 		currentNest = null;
 		eggCount = chocoCount = 0;
 		this.addShutdownHook();
@@ -187,8 +189,10 @@ public class BuildRabbit extends Worker {
 					}
 
 				} catch (JMSException e) {
+					e.printStackTrace();
 					close = true;
 				} catch (InterruptedException e) {
+					e.printStackTrace();
 					close = true;
 				}
 			}

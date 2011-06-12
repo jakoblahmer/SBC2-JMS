@@ -90,6 +90,9 @@ public class LogisticRabbit extends Worker implements MessageListener {
 		if(message instanceof ObjectMessage)	{
 			ObjectMessage om = (ObjectMessage) message;
 			try {
+				
+				log.info(om.getObject());
+				
 				if(om.getObject() instanceof Nest)	{
 					nest = (Nest) om.getObject();
 					
@@ -122,6 +125,7 @@ public class LogisticRabbit extends Worker implements MessageListener {
 //			} catch (InterruptedException e) {
 //				this.close();
 			} catch(JMSException e)	{
+				e.printStackTrace();
 				this.close();
 			}
 		}

@@ -46,8 +46,11 @@ public class ChocolateRabbitRabbit extends Producer {
 				cr.setError(this.calculateDefect());
 
 				message.setObject(cr);
+				message.setStringProperty("product", "chocolateRabbit");
 				
 				log.info("###### ChocoRabbits (" + (i + 1) + ") done");
+				
+				// write to gui
 				
 				producer.send(message);
 				log.info("#######################################");

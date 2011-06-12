@@ -22,6 +22,8 @@ public class Chicken extends Producer {
 	public Chicken(String[] args)	{
 		super(args);
 		this.init("color.queue");
+		
+		
 	}
 
 
@@ -51,6 +53,9 @@ public class Chicken extends Producer {
 				message.setObject(egg);
 				message.setStringProperty("NOCOLOR", "1");
 				producer.send(message);
+
+				// write to gui
+				
 				log.info("#######################################");
 				
 			} catch (InterruptedException e) {

@@ -136,6 +136,7 @@ public class ColorRabbit extends Worker implements MessageListener {
 					
 					// egg is colored, send to server
 					if(egg.isColored())	{
+						replyMsg.setStringProperty("product", "egg");
 						producer.send(replyMsg);
 						
 						guiMsg = session.createTextMessage();
