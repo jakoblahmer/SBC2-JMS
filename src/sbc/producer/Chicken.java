@@ -21,6 +21,7 @@ public class Chicken extends Producer {
 
 	public Chicken(String[] args)	{
 		super(args);
+		this.init("color.queue");
 	}
 
 
@@ -30,6 +31,8 @@ public class Chicken extends Producer {
 		log.info("#######################################");
 		log.info("###### chicken started (lay " + productCount + " eggs)");
 		log.info("#######################################");
+		
+		Egg egg;
 		
 		for(int i=0; i < productCount; i++)	{
 			int sleep = new Random().nextInt(3) + 1;
@@ -42,9 +45,12 @@ public class Chicken extends Producer {
 				
 				log.info("###### EGG (" + (i + 1) + ") done");
 				
-				message.setObject(new Egg(this.id));
+				egg = new Egg(this.id, getRandomColorCount());
+				egg.setError(this.calculateDefect());
 				
-				adminProducer.send(message);
+				message.setObject(egg);
+				message.setStringProperty("NOCOLOR", "1");
+				producer.send(message);
 				log.info("#######################################");
 				
 			} catch (InterruptedException e) {
@@ -62,4 +68,9 @@ public class Chicken extends Producer {
 		
 		this.close();
 	}
+	
+	private int getRandomColorCount()	{
+		return new Random().nextInt(3) + 2;
+	}
+	
 }

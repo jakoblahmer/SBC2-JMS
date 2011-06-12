@@ -1,5 +1,7 @@
 package sbc.producer;
 
+import java.util.Random;
+
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
@@ -17,15 +19,16 @@ public abstract class Producer extends Thread {
 	protected Queue serverQueue;
 	protected QueueConnection connection;
 	protected QueueSession session;
-	protected MessageProducer adminProducer;
+	protected MessageProducer producer;
 
 	protected int productCount;
 
 	protected int id;
+	protected double failureRate;
+	protected String prefix;
 	
 	public Producer(String[] args)	{
 		this.parseArgs(args);
-		this.init();
 	}
 
 	public void setArgs(String[] args)	{
@@ -33,8 +36,8 @@ public abstract class Producer extends Thread {
 	}
 
 	private void parseArgs(String[] args) {
-		if(args.length < 1)	{
-			throw new IllegalArgumentException("at least an ID has to be given in arguments!");
+		if(args.length < 2)	{
+			throw new IllegalArgumentException("at least an ID and PREFIX has to be given in arguments!");
 		}
 		try	{
 			this.id = Integer.parseInt(args[0]);
@@ -42,23 +45,40 @@ public abstract class Producer extends Thread {
 			throw new IllegalArgumentException("ID has to be an integer!");
 		}
 		
-		if(args.length > 1)	{
+		this.prefix = args[1];
+		
+		
+		if(args.length > 2)	{
 			try	{
-				this.productCount = Integer.parseInt(args[1]);
+				this.productCount = Integer.parseInt(args[2]);
 			} catch (Exception e)	{
 				throw new IllegalArgumentException("amount has to be an integer");
 			}
 		} else	{
 			this.productCount = 1;
 		}
+		
+		this.failureRate = 0.2;
+		
+		if(args.length > 3)	{
+			try	{
+				this.failureRate = Double.parseDouble(args[3]);
+			} catch (Exception e)	{
+				throw new IllegalArgumentException("failure rate has to be a float and must be 0 <= failure rate <= 1");
+			}
+		}
+		
 	}
 
+	protected boolean calculateDefect()	{
+		return (this.failureRate >= new Random().nextDouble());
+	}
 
-	protected void init() {
+	protected void init(String queue) {
 		try {
 			ctx = new InitialContext();
 			connectionFactory = (QueueConnectionFactory) ctx.lookup("SBC.Factory");
-			serverQueue = (Queue) ctx.lookup("sbc.server.queue");
+			serverQueue = (Queue) ctx.lookup(prefix + "." + queue);
 			connection = connectionFactory.createQueueConnection();
 			connection.start();
 
@@ -67,7 +87,7 @@ public abstract class Producer extends Thread {
 
 			//				consumer = (QueueReceiver) session.createConsumer(serverQueue);
 
-			adminProducer = session.createProducer(serverQueue);
+			producer = session.createProducer(serverQueue);
 
 			
 		} catch (JMSException e) {
@@ -81,7 +101,7 @@ public abstract class Producer extends Thread {
 
 	protected void close() {
 		try {
-			this.adminProducer.close();
+			this.producer.close();
 			session.close();
 			connection.stop();
 			connection.close();

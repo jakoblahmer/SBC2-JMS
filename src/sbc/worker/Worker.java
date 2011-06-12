@@ -24,17 +24,20 @@ public abstract class Worker {
 	protected QueueSender producer;
 
 	protected String secondArgument;
+	protected String prefix;
+
 	
-	protected static String producerName = "sbc.server.queue";
+	protected Queue guiQueue;
+	protected QueueSender guiProducer;
 	
 	public Worker(String[] args)	{
 		this.parseArgs(args);
-		this.initProducer();
+		this.initConnection();
 	}
 	
 	private void parseArgs(String[] args) {
-		if(args.length < 1)	{
-			throw new IllegalArgumentException("at least an ID has to be given in arguments!");
+		if(args.length < 2)	{
+			throw new IllegalArgumentException("at least an ID and the QUEUE PREFIX have to be given in arguments!");
 		}
 		try	{
 			this.id = Integer.parseInt(args[0]);
@@ -42,24 +45,47 @@ public abstract class Worker {
 			throw new IllegalArgumentException("ID has to be an integer!");
 		}
 		
-		if(args.length > 1)	{
+		this.prefix = args[1];
+		
+		if(args.length > 2)	{
 			try	{
-				this.secondArgument = args[1];
+				this.secondArgument = args[2];
 			} catch (Exception e)	{
 				throw new IllegalArgumentException("amount has to be an integer");
 			}
 		}
 	}
 	
-	protected void initProducer() {
+	/**
+	 * inits the jms connection
+	 */
+	private void initConnection()	{
 		try {
 			ctx = new InitialContext();
 			connectionFactory = (QueueConnectionFactory) ctx.lookup("SBC.Factory");
-			serverQueue = (Queue) ctx.lookup(producerName);
+			
 			connection = connectionFactory.createQueueConnection();
 			connection.start();
 			
 			session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+			
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * inits a producer
+	 * @param producerQueue
+	 */
+	protected void initProducer(String producerQueue) {
+		try {
+			serverQueue = (Queue) ctx.lookup(prefix + "." + producerQueue);
 			
 			producer = (QueueSender) session.createProducer(serverQueue);
 			
@@ -68,6 +94,25 @@ public abstract class Worker {
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * inits the gui producer
+	 */
+	protected void initGUIProducer()	{
+		try {
+			guiQueue = (Queue) ctx.lookup(prefix + "." + "gui.queue");
+			
+			guiProducer = (QueueSender) session.createProducer(guiQueue);
+			
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	protected abstract void initConsumer();

@@ -17,15 +17,15 @@ import sbc.model.Egg;
 import sbc.model.Nest;
 
 
-public class LogisticRabbit extends Worker implements MessageListener {
+public class TestRabbit extends Worker implements MessageListener {
 
 	public static void main(String[] args)	{
-		LogisticRabbit rab = new LogisticRabbit(args);
+		TestRabbit rab = new TestRabbit(args);
 	}
 
-	private static Logger log = Logger.getLogger(LogisticRabbit.class);
+	private static Logger log = Logger.getLogger(TestRabbit.class);
 
-	private static String consumerName = "logistic.queue";
+	private static String consumerName = "test.queue";
 
 
 	private MessageConsumer consumer;
@@ -34,10 +34,15 @@ public class LogisticRabbit extends Worker implements MessageListener {
 
 	private Queue consumerQueue;
 
+	private ObjectMessage replyMsg;
 
-	public LogisticRabbit(String[] args)	{
+	private ObjectMessage guiMsg;
+
+
+	public TestRabbit(String[] args)	{
 		super(args);
 		
+		this.initProducer("logistic.queue");
 		this.initGUIProducer();
 		
 		nest = null;
@@ -72,7 +77,7 @@ public class LogisticRabbit extends Worker implements MessageListener {
 			consumer.setMessageListener(this);
 
 			log.info("#######################################");
-			log.info("###### LOGISTIC RABBIT waiting for nest to ship...");
+			log.info("###### TEST RABBIT waiting for nest...");
 			log.info("###### shutdown using Ctrl + C");
 			log.info("#######################################");
 			
@@ -98,24 +103,24 @@ public class LogisticRabbit extends Worker implements MessageListener {
 //					int sleep = new Random().nextInt(3) + 1;
 //					Thread.sleep(sleep * 1000);
 					
-					nest.setShipped(true);
-					nest.setShipper_id(this.id);
-					log.info("###### NEST (id: " + nest.getId() + ") shipped!");
+					// calculate error and set it
+					nest.calculateError();
+					// set tested to true
+					nest.setTested(true);
+					nest.setTester_id(this.id);
 					
-					ObjectMessage replyMsg = session.createObjectMessage(nest);
+					replyMsg = session.createObjectMessage(nest);
+					producer.send(replyMsg);
 					
-					if(nest.isErrorFreeAndIsComplete())	{
-						// nest error free and completed => write to competed nest container
-						replyMsg.setBooleanProperty("completed", true);
-					} else	{
-						// nest has error (or is not completed) => write to error container
-						replyMsg.setBooleanProperty("error", true);
-					}
 					
-					guiProducer.send(replyMsg);
+					// update gui
+					guiMsg = session.createObjectMessage(nest);
+					guiMsg.setBooleanProperty("tested", true);
+					guiProducer.send(guiMsg);
+					
 					nest = null;
 					log.info("#######################################");
-					log.info("###### LOGISTIC RABBIT - waiting for nest to ship...");
+					log.info("###### TEST RABBIT - waiting for nest to ship...");
 					log.info("#######################################");
 
 				}

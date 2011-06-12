@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="SBC1_JMS_CHICKEN" default="compile" basedir=".">
+<project name="SBC2_JMS" default="compile" basedir=".">
     
     <property environment="env"/>
     <property name="glassfish.home" value="${env.GLASSFISH_HOME}"/>
 
     <property name="src.dir" value="src"/>
     <property name="build.dir" value="build"/>
-	<property name="libGlobal.dir" value="../sbc1_global/lib"/>
-	<property name="distGlobal.dir" value="../sbc1_global/dist"/>
+	<property name="libGlobal.dir" value="../sbc2_global/lib"/>
+	<property name="distGlobal.dir" value="../sbc2_global/dist"/>
     
     <path id="classpath">
         <fileset dir="${glassfish.home}/lib">
@@ -30,11 +30,12 @@
     </target>
 
 	<target name="run-admin" depends="compile">
-	        <java classname="sbc.admin.Admin" 
-	              fork="true"
-	              classpathref="classpath">
-			</java>
-	    </target>
+	    <java classname="sbc.admin.Admin" 
+	          fork="true"
+	          classpathref="classpath">
+			<arg line="1 sbc"/>
+		</java>
+    </target>
 	
 	<!-- PRODUCER (started via GUI) -->
 	
@@ -56,11 +57,47 @@
 
 	
 	<!-- WORKER (can not be started via GUI) -->
+	<target name="run-colorRabbits" depends="compile">
+		<parallel failonany="true">
+			<ant target="run-colorRabbit" />
+			<ant target="run-colorRabbit2" />
+			<ant target="run-colorRabbit3" />
+			<ant target="run-colorRabbit4" />
+		<!--	<ant target="s1.run-colorRabbit" />
+			<ant target="s1.run-colorRabbit2" />
+			<ant target="s1.run-colorRabbit3" />
+			<ant target="s1.run-colorRabbit4" />
+			<ant target="s1.run-colorRabbit5" />
+			<ant target="s1.run-colorRabbit6" />
+			<ant target="s1.run-colorRabbit7" />
+			<ant target="s1.run-colorRabbit8" />
+			<ant target="s1.run-colorRabbit9" />
+			<ant target="s1.run-colorRabbit10" />
+			
+			<ant target="s2.run-colorRabbit" />
+			<ant target="s2.run-colorRabbit2" />
+			<ant target="s2.run-colorRabbit3" />
+			<ant target="s2.run-colorRabbit4" />
+			<ant target="s2.run-colorRabbit5" />
+			<ant target="s2.run-colorRabbit6" />
+			
+ 			<ant target="s3.run-colorRabbit" />
+			<ant target="s3.run-colorRabbit2" />
+			<ant target="s3.run-colorRabbit3" />
+			<ant target="s3.run-colorRabbit4" />
+ 			<ant target="s3.run-colorRabbit5" />
+			<ant target="s3.run-colorRabbit6" />
+			<ant target="s3.run-colorRabbit7" />
+			<ant target="s3.run-colorRabbit8" />  -->
+		</parallel>
+	</target>
+	
+	
     <target name="run-colorRabbit" depends="compile">
         <java classname="sbc.worker.ColorRabbit" 
               fork="true"
               classpathref="classpath">
-        	<arg line="1 RED"/>
+        	<arg line="1 sbc RED"/>
 		</java>
     </target>
 	
@@ -68,15 +105,32 @@
         <java classname="sbc.worker.ColorRabbit" 
               fork="true"
               classpathref="classpath">
-        	<arg line="2 GREEN"/>
+        	<arg line="2 sbc GREEN"/>
 		</java>
     </target>
+	
+    <target name="run-colorRabbit3" depends="compile">
+        <java classname="sbc.worker.ColorRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="3 sbc BLUE"/>
+		</java>
+    </target>
+	
+    <target name="run-colorRabbit4" depends="compile">
+        <java classname="sbc.worker.ColorRabbit" 
+              fork="true"
+              classpathref="classpath">
+        	<arg line="4 sbc YELLOW"/>
+		</java>
+    </target>
+	
 	
     <target name="run-buildRabbit" depends="compile">
         <java classname="sbc.worker.BuildRabbit" 
               fork="true"
               classpathref="classpath">
-        	<arg line="3"/>
+        	<arg line="3 sbc"/>
 		</java>
     </target>
 	

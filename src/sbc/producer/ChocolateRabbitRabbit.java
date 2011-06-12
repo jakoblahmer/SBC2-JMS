@@ -21,6 +21,7 @@ public class ChocolateRabbitRabbit extends Producer {
 
 	public ChocolateRabbitRabbit(String[] args)	{
 		super(args);
+		this.init("build.queue");
 	}
 
 
@@ -31,6 +32,8 @@ public class ChocolateRabbitRabbit extends Producer {
 		log.info("###### CholateRabbit started (make " + productCount + " ChocoRabbits)");
 		log.info("#######################################");
 		
+		ChocolateRabbit cr;
+		
 		for(int i=0; i < productCount; i++)	{
 			int sleep = new Random().nextInt(3) + 1;
 			
@@ -39,11 +42,14 @@ public class ChocolateRabbitRabbit extends Producer {
 				
 				ObjectMessage message = session.createObjectMessage();
 				
-				message.setObject(new ChocolateRabbit(this.id));
+				cr = new ChocolateRabbit(this.id);
+				cr.setError(this.calculateDefect());
+
+				message.setObject(cr);
 				
 				log.info("###### ChocoRabbits (" + (i + 1) + ") done");
 				
-				adminProducer.send(message);
+				producer.send(message);
 				log.info("#######################################");
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block

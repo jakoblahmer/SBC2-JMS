@@ -28,7 +28,7 @@ public class BuildRabbit extends Worker {
 	private final static String messageSelectorCHOCO = "product = 'chocolateRabbit'"; 
 	private final static String messageSelectorEGG = "product = 'egg'"; 
 
-	private static String consumerName = "sbc.build.queue";
+	private static String consumerName = "build.queue";
 
 	private MessageConsumer consumer;
 
@@ -41,9 +41,14 @@ public class BuildRabbit extends Worker {
 
 	private boolean close;
 
+	private ObjectMessage replyMsg;
+
+	private ObjectMessage guiMsg;
+
 
 	public BuildRabbit(String[] args)	{
 		super(args);
+		this.initProducer("test.queue");
 		currentNest = null;
 		eggCount = chocoCount = 0;
 		this.addShutdownHook();
@@ -66,7 +71,7 @@ public class BuildRabbit extends Worker {
 	@Override
 	protected void initConsumer() {
 		try {
-			consumerQueue = (Queue) ctx.lookup(consumerName);
+			consumerQueue = (Queue) ctx.lookup(prefix + "." + consumerName);
 
 			consumer = session.createConsumer(consumerQueue, messageSelectorALL);
 
@@ -155,10 +160,15 @@ public class BuildRabbit extends Worker {
 						log.info("###### NEST is complete, send it");
 						log.info("#######################################");
 
-						ObjectMessage replyMsg = session.createObjectMessage(currentNest);
+						replyMsg = session.createObjectMessage(currentNest);
 
 						producer.send(replyMsg);
-
+						
+						// update gui
+						guiMsg = session.createObjectMessage(currentNest);
+						guiMsg.setBooleanProperty("build", true);
+						guiProducer.send(guiMsg);
+						
 						currentNest = null;
 						eggCount = chocoCount = 0;
 

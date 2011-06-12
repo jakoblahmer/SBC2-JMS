@@ -25,7 +25,7 @@ public class Admin implements MessageListener, ProducerInterface {
 
 	private static Logger log = Logger.getLogger(Admin.class);
 	
-	private static int id = 1;
+	private int id = 1;
 	
 	private InitialContext ctx;
 	private QueueConnectionFactory connectionFactory;
@@ -36,23 +36,40 @@ public class Admin implements MessageListener, ProducerInterface {
 
 	private AdminGUI gui;
 
+	private String prefix;
+
 	
 	public static void main(String[] args)	{
-		Admin admin = new Admin();
+		Admin admin = new Admin(args);
 	}
 	
-	public Admin()	{
-		gui = new AdminGUI(this);
+	public Admin(String[] args)	{
+		parseArgs(args);
+		
+		gui = new AdminGUI(this, "" + this.id);
 		gui.start();
 		
 		this.initConsumer();
+	}
+	
+	private void parseArgs(String[] args) {
+		if(args.length < 2)	{
+			throw new IllegalArgumentException("at least an ID and the QUEUE PREFIX have to be given in arguments!");
+		}
+		try	{
+			this.id = Integer.parseInt(args[0]);
+		} catch (Exception e)	{
+			throw new IllegalArgumentException("ID has to be an integer!");
+		}
+		
+		this.prefix = args[1];
 	}
 	
 	protected void initConsumer() {
 		try {
 			ctx = new InitialContext();
 			connectionFactory = (QueueConnectionFactory) ctx.lookup("SBC.Factory");
-			guiQueue = (Queue) ctx.lookup("sbc.gui.queue");
+			guiQueue = (Queue) ctx.lookup(this.prefix + ".gui.queue");
 			connection = connectionFactory.createQueueConnection();
 			connection.start();
 			
@@ -77,12 +94,12 @@ public class Admin implements MessageListener, ProducerInterface {
 		ChocolateRabbitRabbit rabbit;
 		
 		for(int i=0;i<chicken; i++)	{
-			chick = new Chicken(new String[]{"" + id++, "" + eggs});
+			chick = new Chicken(new String[]{"" + id++, this.prefix, "" + eggs});
 			chick.start();
 		}
 		
 		for(int i=0;i<choco; i++)	{
-			rabbit = new ChocolateRabbitRabbit(new String[]{"" + id++, "" + chocoRabbits});
+			rabbit = new ChocolateRabbitRabbit(new String[]{"" + id++, this.prefix, "" + chocoRabbits});
 			rabbit.start();
 		}
 	}
@@ -95,25 +112,49 @@ public class Admin implements MessageListener, ProducerInterface {
 				if(om.getObject() == null)	{
 					// do nothing
 				} else if(om.getObject() instanceof Nest)	{
-					gui.updateNest((Nest)om.getObject());
+					Nest nest = (Nest)om.getObject();
+					
+					if(message.propertyExists("build"))	{
+						gui.addNest(nest);
+					}
+					
+					if(message.propertyExists("tested"))	{
+						gui.updateNest(nest);
+					}
+					
+					if(message.propertyExists("error"))	{
+						gui.addErrorNest(nest);
+					}
+					
+					if(message.propertyExists("completed"))	{
+						gui.addCompletedNest(nest);
+					}
+					
 				} else	{
 					log.error("WRONG OBJECTDATA SENT");
 					return;
 				}
-//				log.info("given:");
-//				log.info("\teggCount: " + message.getIntProperty("eggCount"));
-//				log.info("\teggColorCount: " + message.getIntProperty("eggColorCount"));
-//				log.info("\tchocoCount: " + message.getIntProperty("chocoCount"));
-//				log.info("\tnestCount: " + message.getIntProperty("nestCount"));
-//				log.info("\tnestCompletedCount: " + message.getIntProperty("nestCompletedCount"));
-				gui.updateInfoData(message.getIntProperty("eggCount"),
-						message.getIntProperty("eggColorCount"),
-						message.getIntProperty("chocoCount"), 
-						message.getIntProperty("nestCount"), 
-						message.getIntProperty("nestCompletedCount"));
-					
-
 			} catch(JMSException e)	{
+				e.printStackTrace();
+			}
+		} else if(message instanceof javax.jms.TextMessage)	{
+			
+			try {
+				// update egg count
+				if(message.propertyExists("eggCount"))
+					gui.updateEgg(message.getIntProperty("eggCount"));
+				
+				// add colored egg (removes not colored egg automatically)
+				if(message.propertyExists("eggColorCount"))
+					gui.addColoredEgg(message.getIntProperty("eggCount"));
+				
+				
+				if(message.propertyExists("chocoCount"))
+					gui.updateChoco(message.getIntProperty("chocoCount"));
+				
+				
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else	{
