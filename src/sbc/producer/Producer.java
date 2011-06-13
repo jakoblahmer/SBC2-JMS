@@ -136,9 +136,12 @@ public abstract class Producer extends Thread {
 	protected void close() {
 		try {
 			this.producer.close();
+			this.guiProducer.close();
 			session.close();
+			session = null;
 			connection.stop();
 			connection.close();
+			connection = null;
 			connectionFactory = null;
 			ctx.close();
 			ctx = null;

@@ -145,8 +145,25 @@ public abstract class Worker {
 	 * close producer
 	 * @throws JMSException
 	 */
-	protected void closeProducer() throws JMSException	{
-		producer.close();
+	protected void closeProducer()	{
+		try {
+			callbackQueue = null;
+			serverQueue = null;
+			guiQueue = null;
+			producer.close();
+			producer = null;
+			session.close();
+			session = null;
+			connection.stop();
+			connection.close();
+			connection = null;
+			connectionFactory = null;
+			ctx.close();
+			ctx = null;
+		} catch (NamingException e) {
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
 	}
 	
 

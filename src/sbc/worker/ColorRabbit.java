@@ -123,8 +123,9 @@ public class ColorRabbit extends Worker implements MessageListener {
 					
 //					int sleep = new Random().nextInt(3) + 1;
 //					Thread.sleep(sleep * 1000);
-
-					egg.addColor(this.color, this.id);
+					if(!egg.isColored())	{
+						egg.addColor(this.color, this.id);
+					}
 
 					replyMsg = session.createObjectMessage(egg);
 					
@@ -133,10 +134,12 @@ public class ColorRabbit extends Worker implements MessageListener {
 						replyMsg.setStringProperty("product", "egg");
 						producer.send(replyMsg);
 						
-						guiMsg = session.createTextMessage();
-						guiMsg.setIntProperty("eggCount", -1);
-						guiMsg.setIntProperty("eggColorCount", 1);
-						guiProducer.send(guiMsg);
+						if(!message.propertyExists("hideFromGUI"))	{
+							guiMsg = session.createTextMessage();
+							guiMsg.setIntProperty("eggCount", -1);
+							guiMsg.setIntProperty("eggColorCount", 1);
+							guiProducer.send(guiMsg);
+						}
 						
 						log.debug(this.color + " SENT TO SERVER: " + egg + ")");
 					}
@@ -178,17 +181,18 @@ public class ColorRabbit extends Worker implements MessageListener {
 			if(egg != null)	{
 				// if an egg is set, create callbackproducer
 				try {
-					this.initCallbackProducer("color.queue");
 					ObjectMessage replyMsg = session.createObjectMessage(egg);
 					for(Colors col : Colors.values())	{
 						replyMsg.setStringProperty(col.toString(), (egg.getColor().contains(col.toString()) ? "1" : "0"));
 					}
 					replyMsg.setBooleanProperty("hideFromGUI", true);
-					callbackProducer.send(replyMsg);
-					this.closeCallbackProducer();
+					notCompletelyColoredProducer.send(replyMsg);
+					
 				} catch (Exception e) {
 				}
 			}
+			
+			notCompletelyColoredProducer.close();
 			
 			this.closeGUIProducer();
 			this.closeProducer();

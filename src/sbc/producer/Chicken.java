@@ -25,9 +25,9 @@ public class Chicken extends Producer {
 	public Chicken(String[] args)	{
 		super(args);
 		
-//		this.init("color.queue");
+		this.init("color.queue");
 		// DEBUG
-		this.init("build.queue");
+//		this.init("build.queue");
 		
 		this.initGUIProducer();
 	}
@@ -60,8 +60,8 @@ public class Chicken extends Producer {
 				egg.setError(this.calculateDefect());
 				
 				// DEBUG:
-				egg.setColored(true);
-				message.setStringProperty("product", "egg");
+//				egg.setColored(true);
+//				message.setStringProperty("product", "egg");
 				
 				message.setObject(egg);
 				message.setStringProperty("NOCOLOR", "1");

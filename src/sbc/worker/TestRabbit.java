@@ -58,6 +58,7 @@ public class TestRabbit extends Worker implements MessageListener {
             public void run() {
             	log.info("SHUTDOWN...");
             	close();
+            	this.destroy();
             }
         });
 	}
@@ -111,10 +112,12 @@ public class TestRabbit extends Worker implements MessageListener {
 					producer.send(replyMsg);
 					
 					
-					// update gui
-					guiMsg = session.createObjectMessage(nest);
-					guiMsg.setBooleanProperty("tested", true);
-					guiProducer.send(guiMsg);
+					if(!message.propertyExists("hideFromGUI"))	{
+						// update gui
+						guiMsg = session.createObjectMessage(nest);
+						guiMsg.setBooleanProperty("tested", true);
+						guiProducer.send(guiMsg);
+					}
 					
 					nest = null;
 					log.info("#######################################");
@@ -134,28 +137,27 @@ public class TestRabbit extends Worker implements MessageListener {
 	@Override
 	protected void close() {
 		try {
+			consumer.setMessageListener(null);
+			consumer.close();
 			if(nest != null)	{
 				try {
+					this.initCallbackProducer("test.queue");
 					ObjectMessage replyMsg = session.createObjectMessage(nest);
 					replyMsg.setBooleanProperty("hideFromGUI", true);
-					producer.send(replyMsg);
+					callbackProducer.send(replyMsg);
+					this.closeCallbackProducer();
 				} catch (JMSException e) {
 				}
 			}
-			producer.close();
-			consumer.setMessageListener(null);
-			consumer.close();
-			session.close();
-			connection.stop();
-			connection.close();
-			ctx.close();
-			ctx = null;
+			
+			this.closeGUIProducer();
+			this.closeProducer();
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (NamingException e) {
 			e.printStackTrace();
 		} finally	{
-			System.exit(0);
+			System.exit(1);
 		}
 	}
 }

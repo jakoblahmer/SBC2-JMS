@@ -13,6 +13,7 @@
         <fileset dir="${glassfish.home}/lib">
             <include name="javaee.jar"/>
             <include name="appserv-rt.jar"/>
+            <include name="gf-client.jar"/>
         </fileset>
 		<fileset dir="${libGlobal.dir}" includes="**/*.jar" />
 		<fileset dir="${distGlobal.dir}" includes="**/*.jar" />
@@ -145,7 +146,7 @@
     <target name="run-logisticRabbit" depends="compile">
         <java classname="sbc.worker.LogisticRabbit" 
               fork="true"
-              classpathref="classpath">
+              classpathref="classpath" failonerror="true">
         	<arg line="45 sbc"/>
 		</java>
     </target>
@@ -162,7 +163,7 @@
     <target name="run-testRabbit" depends="compile">
         <java classname="sbc.worker.TestRabbit" 
               fork="true"
-              classpathref="classpath">
+              classpathref="classpath" failonerror="true">
         	<arg line="56 sbc"/>
 		</java>
     </target>
