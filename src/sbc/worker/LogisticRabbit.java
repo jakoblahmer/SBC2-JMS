@@ -1,8 +1,5 @@
 package sbc.worker;
 
-import java.util.Random;
-import java.util.Scanner;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -13,8 +10,7 @@ import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 
-import sbc.model.Egg;
-import sbc.model.Nest;
+import sbc.jmsmodel.Nest;
 
 
 public class LogisticRabbit extends Worker implements MessageListener {

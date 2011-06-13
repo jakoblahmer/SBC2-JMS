@@ -1,5 +1,7 @@
 package sbc.admin;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -17,7 +19,7 @@ import org.apache.log4j.Logger;
 
 import sbc.gui.AdminGUI;
 import sbc.gui.ProducerInterface;
-import sbc.model.Nest;
+import sbc.jmsmodel.Nest;
 import sbc.producer.Chicken;
 import sbc.producer.ChocolateRabbitRabbit;
 
@@ -38,6 +40,9 @@ public class Admin implements MessageListener, ProducerInterface {
 
 	private String prefix;
 
+	private static AtomicInteger chickenID = new AtomicInteger(0);
+	private static AtomicInteger chocoRabbitID = new AtomicInteger(0);
+	
 	
 	public static void main(String[] args)	{
 		Admin admin = new Admin(args);
@@ -94,12 +99,12 @@ public class Admin implements MessageListener, ProducerInterface {
 		ChocolateRabbitRabbit rabbit;
 		
 		for(int i=0;i<chicken; i++)	{
-			chick = new Chicken(new String[]{"" + id++, this.prefix, "" + eggs});
+			chick = new Chicken(new String[]{"" + chickenID.incrementAndGet(), "" + this.id, this.prefix, "" + eggs});
 			chick.start();
 		}
 		
 		for(int i=0;i<choco; i++)	{
-			rabbit = new ChocolateRabbitRabbit(new String[]{"" + id++, this.prefix, "" + chocoRabbits});
+			rabbit = new ChocolateRabbitRabbit(new String[]{"" + chocoRabbitID.incrementAndGet(), "" + this.id,  this.prefix, "" + chocoRabbits});
 			rabbit.start();
 		}
 	}

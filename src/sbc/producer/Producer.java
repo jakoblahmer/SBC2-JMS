@@ -10,6 +10,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -25,10 +26,14 @@ public abstract class Producer extends Thread {
 	protected int productCount;
 
 	protected int id;
+	protected int adminid;
+	
 	protected double failureRate;
 	protected String prefix;
 	protected Queue guiQueue;
 	protected QueueSender guiProducer;
+	
+	protected TextMessage guiMsg;
 	
 	public Producer(String[] args)	{
 		this.parseArgs(args);
@@ -39,8 +44,8 @@ public abstract class Producer extends Thread {
 	}
 
 	private void parseArgs(String[] args) {
-		if(args.length < 2)	{
-			throw new IllegalArgumentException("at least an ID and PREFIX has to be given in arguments!");
+		if(args.length < 3)	{
+			throw new IllegalArgumentException("at least an ID, parent ID and the QUEUE PREFIX have to be given in arguments!");
 		}
 		try	{
 			this.id = Integer.parseInt(args[0]);
@@ -48,12 +53,18 @@ public abstract class Producer extends Thread {
 			throw new IllegalArgumentException("ID has to be an integer!");
 		}
 		
-		this.prefix = args[1];
+		try	{
+			this.adminid = Integer.parseInt(args[1]);
+		} catch (Exception e)	{
+			throw new IllegalArgumentException("ID has to be an integer!");
+		}
+		
+		this.prefix = args[2];
 		
 		
-		if(args.length > 2)	{
+		if(args.length > 3)	{
 			try	{
-				this.productCount = Integer.parseInt(args[2]);
+				this.productCount = Integer.parseInt(args[3]);
 			} catch (Exception e)	{
 				throw new IllegalArgumentException("amount has to be an integer");
 			}
@@ -63,9 +74,9 @@ public abstract class Producer extends Thread {
 		
 		this.failureRate = 0.2;
 		
-		if(args.length > 3)	{
+		if(args.length > 4)	{
 			try	{
-				this.failureRate = Double.parseDouble(args[3]);
+				this.failureRate = Double.parseDouble(args[4]);
 			} catch (Exception e)	{
 				throw new IllegalArgumentException("failure rate has to be a float and must be 0 <= failure rate <= 1");
 			}

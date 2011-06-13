@@ -1,6 +1,7 @@
 package sbc.worker;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -11,9 +12,9 @@ import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 
-import sbc.model.ChocolateRabbit;
-import sbc.model.Egg;
-import sbc.model.Nest;
+import sbc.jmsmodel.Egg;
+import sbc.jmsmodel.ChocolateRabbit;
+import sbc.jmsmodel.Nest;
 
 
 public class BuildRabbit extends Worker {
@@ -22,6 +23,8 @@ public class BuildRabbit extends Worker {
 		BuildRabbit rab = new BuildRabbit(args);
 	}
 
+	private AtomicInteger nestID = new AtomicInteger(0);
+	
 	private static Logger log = Logger.getLogger(BuildRabbit.class);
 
 	private final static String messageSelectorALL = "product = 'egg' OR product = 'chocolateRabbit'"; 
@@ -110,7 +113,7 @@ public class BuildRabbit extends Worker {
 				continue;
 
 			if(currentNest == null)	{
-				currentNest = new Nest(this.id);
+				currentNest = new Nest(this.id + "_" + this.nestID.incrementAndGet(), this.id);
 				chocoCount = eggCount = 0;
 			}
 

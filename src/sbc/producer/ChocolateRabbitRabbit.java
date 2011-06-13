@@ -1,13 +1,15 @@
 package sbc.producer;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
+import javax.jms.TextMessage;
 
 import org.apache.log4j.Logger;
 
-import sbc.model.ChocolateRabbit;
+import sbc.jmsmodel.ChocolateRabbit;
 
 public class ChocolateRabbitRabbit extends Producer {
 
@@ -19,9 +21,12 @@ public class ChocolateRabbitRabbit extends Producer {
 	}
 
 
+	private AtomicInteger chocoID = new AtomicInteger(0);
+	
 	public ChocolateRabbitRabbit(String[] args)	{
 		super(args);
 		this.init("build.queue");
+		this.initGUIProducer();
 	}
 
 
@@ -42,7 +47,7 @@ public class ChocolateRabbitRabbit extends Producer {
 				
 				ObjectMessage message = session.createObjectMessage();
 				
-				cr = new ChocolateRabbit(this.id);
+				cr = new ChocolateRabbit(String.valueOf(this.adminid) + "_" + String.valueOf(this.id) + "_" + String.valueOf(chocoID.incrementAndGet()), this.id);
 				cr.setError(this.calculateDefect());
 
 				message.setObject(cr);
@@ -51,6 +56,9 @@ public class ChocolateRabbitRabbit extends Producer {
 				log.info("###### ChocoRabbits (" + (i + 1) + ") done");
 				
 				// write to gui
+				guiMsg = session.createTextMessage();
+				guiMsg.setIntProperty("chocoCount", 1);
+				guiProducer.send(guiMsg);
 				
 				producer.send(message);
 				log.info("#######################################");

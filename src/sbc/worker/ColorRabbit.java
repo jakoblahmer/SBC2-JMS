@@ -12,7 +12,7 @@ import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 
-import sbc.model.Egg;
+import sbc.jmsmodel.Egg;
 import sbc.worker.colorRabbit.Colors;
 import sbc.worker.exceptions.NoColorGivenException;
 
@@ -116,16 +116,10 @@ public class ColorRabbit extends Worker implements MessageListener {
 		if(message instanceof ObjectMessage)	{
 			ObjectMessage om = (ObjectMessage) message;
 			try {
+				
 				if(om.getObject() instanceof Egg)	{
 					egg = (Egg) om.getObject();
 					log.info(this.color + " GOT: " + egg + ")");
-					
-					// update gui
-					if(egg.getColor().isEmpty())	{
-						guiMsg = session.createTextMessage();
-						guiMsg.setIntProperty("eggCount", 1);
-						guiProducer.send(guiMsg);
-					}
 					
 //					int sleep = new Random().nextInt(3) + 1;
 //					Thread.sleep(sleep * 1000);

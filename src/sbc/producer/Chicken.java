@@ -1,13 +1,15 @@
 package sbc.producer;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
+import javax.jms.TextMessage;
 
 import org.apache.log4j.Logger;
 
-import sbc.model.Egg;
+import sbc.jmsmodel.Egg;
 
 public class Chicken extends Producer {
 
@@ -18,12 +20,12 @@ public class Chicken extends Producer {
 		chicken.start();
 	}
 
-
+	private AtomicInteger eggID = new AtomicInteger(0);
+	
 	public Chicken(String[] args)	{
 		super(args);
 		this.init("color.queue");
-		
-		
+		this.initGUIProducer();
 	}
 
 
@@ -47,7 +49,10 @@ public class Chicken extends Producer {
 				
 				log.info("###### EGG (" + (i + 1) + ") done");
 				
-				egg = new Egg(this.id, getRandomColorCount());
+				egg = new Egg(String.valueOf(this.adminid) + "_" + String.valueOf(this.id) + "_" + String.valueOf(eggID.incrementAndGet())
+							, this.id
+							, getRandomColorCount());
+				
 				egg.setError(this.calculateDefect());
 				
 				message.setObject(egg);
@@ -55,6 +60,10 @@ public class Chicken extends Producer {
 				producer.send(message);
 
 				// write to gui
+				guiMsg = session.createTextMessage();
+				guiMsg.setIntProperty("eggCount", 1);
+				guiProducer.send(guiMsg);
+				
 				
 				log.info("#######################################");
 				
