@@ -27,6 +27,9 @@ public abstract class Worker {
 	
 	protected Queue guiQueue;
 	protected QueueSender guiProducer;
+
+	protected Queue callbackQueue;
+	protected QueueSender callbackProducer;
 	
 	public Worker(String[] args)	{
 		this.parseArgs(args);
@@ -110,8 +113,42 @@ public abstract class Worker {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
+	
+	/**
+	 * inits the callback producer (when worker is closed)
+	 * @throws NamingException 
+	 * @throws JMSException 
+	 */
+	protected void initCallbackProducer(String callbackQueueName) throws NamingException, JMSException	{
+		callbackQueue = (Queue) ctx.lookup(prefix + "." + callbackQueueName);
+		callbackProducer = (QueueSender) session.createProducer(guiQueue);
+	}
+	
+	/**
+	 * closes the callback producer (when worker is closed)
+	 * @throws JMSException 
+	 */
+	protected void closeCallbackProducer() throws JMSException	{
+		callbackProducer.close();
+	}
+	
+	/**
+	 * close GUI producer
+	 * @throws JMSException
+	 */
+	protected void closeGUIProducer() throws JMSException	{
+		guiProducer.close();
+	}
+	
+	/**
+	 * close producer
+	 * @throws JMSException
+	 */
+	protected void closeProducer() throws JMSException	{
+		producer.close();
+	}
+	
 
 	protected abstract void initConsumer();
 	

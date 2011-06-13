@@ -172,17 +172,27 @@ public class ColorRabbit extends Worker implements MessageListener {
 	@Override
 	protected void close() {
 		try {
-			if(egg != null)	{
-				try {
-					ObjectMessage replyMsg = session.createObjectMessage(egg);
-					replyMsg.setBooleanProperty("hideFromGUI", true);
-					producer.send(replyMsg);
-				} catch (JMSException e) {
-				}
-			}
-			producer.close();
+			// first close consumer
 			consumer.setMessageListener(null);
 			consumer.close();
+			if(egg != null)	{
+				// if an egg is set, create callbackproducer
+				try {
+					this.initCallbackProducer("color.queue");
+					ObjectMessage replyMsg = session.createObjectMessage(egg);
+					for(Colors col : Colors.values())	{
+						replyMsg.setStringProperty(col.toString(), (egg.getColor().contains(col.toString()) ? "1" : "0"));
+					}
+					replyMsg.setBooleanProperty("hideFromGUI", true);
+					callbackProducer.send(replyMsg);
+					this.closeCallbackProducer();
+				} catch (Exception e) {
+				}
+			}
+			
+			this.closeGUIProducer();
+			this.closeProducer();
+			
 			session.close();
 			connection.stop();
 			connection.close();
