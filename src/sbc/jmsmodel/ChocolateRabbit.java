@@ -31,5 +31,4 @@ public class ChocolateRabbit extends sbc.model.ChocolateRabbit {
 	public String toString()	{
 		return "ChocolateRabbit: [id: " + this.id + ", producer_id: " + producer_id + ", failure: " + this.error + "]";
 	}
-	
 }

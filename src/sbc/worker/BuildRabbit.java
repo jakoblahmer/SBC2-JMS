@@ -156,9 +156,8 @@ public class BuildRabbit extends Worker {
 						return;
 					}
 
-					int sleep = new Random().nextInt(3) + 1;
-
-					Thread.sleep(sleep * 1000);
+//					int sleep = new Random().nextInt(3) + 1;
+//					Thread.sleep(sleep * 1000);
 
 					log.info("NEST STATUS: " + currentNest);
 
@@ -199,9 +198,9 @@ public class BuildRabbit extends Worker {
 				} catch (JMSException e) {
 					e.printStackTrace();
 					close = true;
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					close = true;
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//					close = true;
 				}
 			}
 		}
