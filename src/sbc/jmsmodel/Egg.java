@@ -10,6 +10,7 @@ public class Egg extends sbc.model.Egg {
 	public Egg(String egg_id, int producer_id, int colorCount)	{
 		super(producer_id, colorCount);
 		this.id = egg_id;
+		this.setId(0);
 	}
 	
 	public String getStringId()	{
@@ -17,6 +18,7 @@ public class Egg extends sbc.model.Egg {
 	}
 	
 	public void setStringId(String id)	{
+		this.setId(0);
 		this.id = id;
 	}
 	

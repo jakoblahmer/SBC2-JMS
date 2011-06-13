@@ -10,6 +10,7 @@ public class Nest extends sbc.model.Nest {
 	public Nest(String id, int producer_id) {
 		super(producer_id);
 		this.id = id;
+		this.setId(0);
 	}
 
 	public String getStringId()	{
@@ -17,6 +18,7 @@ public class Nest extends sbc.model.Nest {
 	}
 	
 	public void setStringId(String id)	{
+		this.setId(0);
 		this.id = id;
 	}
 	

@@ -10,6 +10,7 @@ public class ChocolateRabbit extends sbc.model.ChocolateRabbit {
 	public ChocolateRabbit(String choco_id, int producer_id) {
 		super(producer_id);
 		this.id = choco_id;
+		this.setId(0);
 	}
 	
 	public String getStringId()	{
@@ -17,6 +18,7 @@ public class ChocolateRabbit extends sbc.model.ChocolateRabbit {
 	}
 	
 	public void setStringId(String id)	{
+		this.setId(0);
 		this.id = id;
 	}
 	

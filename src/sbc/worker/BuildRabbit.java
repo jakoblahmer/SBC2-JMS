@@ -53,7 +53,9 @@ public class BuildRabbit extends Worker {
 		super(args);
 		
 		this.initProducer("test.queue");
+		
 		this.initGUIProducer();
+		
 		currentNest = null;
 		eggCount = chocoCount = 0;
 		this.addShutdownHook();
@@ -103,8 +105,10 @@ public class BuildRabbit extends Worker {
 		while(!close)	{
 
 			try {
+				log.info("AWAITING MESSAGE");
 				message = consumer.receive(3000);
 			} catch (JMSException e1) {
+				log.info("PRODUCED ERROR");
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
@@ -168,6 +172,7 @@ public class BuildRabbit extends Worker {
 						replyMsg = session.createObjectMessage(currentNest);
 
 						producer.send(replyMsg);
+						
 						
 						// update gui
 						guiMsg = session.createObjectMessage(currentNest);

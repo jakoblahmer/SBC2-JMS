@@ -66,6 +66,7 @@ public class TestRabbit extends Worker implements MessageListener {
 	protected void initConsumer() {
 
 		try {
+			log.info("listen to: " + prefix + "." + consumerName);
 			consumerQueue = (Queue) ctx.lookup(prefix + "." + consumerName);
 
 			consumer = session.createConsumer(consumerQueue);
@@ -88,6 +89,7 @@ public class TestRabbit extends Worker implements MessageListener {
 
 	@Override
 	public void onMessage(Message message) {
+		log.debug("RECEIVED SOMETHING ");
 		if(message instanceof ObjectMessage)	{
 			ObjectMessage om = (ObjectMessage) message;
 			try {
