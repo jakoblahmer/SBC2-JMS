@@ -6,5 +6,6 @@ package sbc.loadbalancing;
  */
 public interface ILoadBalancingCallback {
 	
-	public void checkLoadBalance();
+	public void addEggs(String factory, int amount);
+	public void addChocolateRabbits(String factory, int amount);
 }

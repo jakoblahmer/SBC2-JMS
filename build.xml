@@ -6,8 +6,8 @@
 
     <property name="src.dir" value="src"/>
     <property name="build.dir" value="build"/>
-	<property name="libGlobal.dir" value="../sbc2_global/lib"/>
-	<property name="distGlobal.dir" value="../sbc2_global/dist"/>
+	<property name="libGlobal.dir" value="../SBC2-GLOBAL/lib"/>
+	<property name="distGlobal.dir" value="../SBC2-GLOBAL/dist"/>
     
     <path id="classpath">
         <fileset dir="${glassfish.home}/lib">
