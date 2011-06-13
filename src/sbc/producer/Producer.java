@@ -34,6 +34,7 @@ public abstract class Producer extends Thread {
 	protected QueueSender guiProducer;
 	
 	protected TextMessage guiMsg;
+	protected boolean stop = false;
 	
 	public Producer(String[] args)	{
 		this.parseArgs(args);
@@ -153,6 +154,10 @@ public abstract class Producer extends Thread {
 //		finally	{
 //			System.exit(0);
 //		}
+	}
+	
+	public void stopBenchmark() {
+		this.stop = true;
 	}
 	
 }

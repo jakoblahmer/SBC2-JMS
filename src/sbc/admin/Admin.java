@@ -12,6 +12,9 @@ import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -40,8 +43,29 @@ public class Admin implements MessageListener, ProducerInterface {
 
 	private String prefix;
 
+	private boolean RUN_GUI = true;
+
+	private int benchmarkChicks;
+	private int benchmarkChoco;
+
+	private int completedNestCount;
+	private int errorNestCount;
+
+	private Topic benchTopic;
+
+	private TopicSubscriber benchSubscriber;
+
+	private ChocolateRabbitRabbit[] benchRabbits;
+
+	private Chicken[] benchChickens;
+
 	private static AtomicInteger chickenID = new AtomicInteger(0);
 	private static AtomicInteger chocoRabbitID = new AtomicInteger(0);
+	
+	
+	private int eggCount = 0;
+	private int coloredEggCount = 0;
+	private int chocoCount = 0;
 	
 	
 	public static void main(String[] args)	{
@@ -51,9 +75,13 @@ public class Admin implements MessageListener, ProducerInterface {
 	public Admin(String[] args)	{
 		parseArgs(args);
 		
-		gui = new AdminGUI(this, "" + this.id);
-		gui.start();
-		
+		if(RUN_GUI)	{
+			gui = new AdminGUI(this, "" + this.id);
+			gui.start();
+		} else	{
+			completedNestCount = 0;
+			errorNestCount = 0;
+		}
 		this.initConsumer();
 	}
 	
@@ -68,6 +96,22 @@ public class Admin implements MessageListener, ProducerInterface {
 		}
 		
 		this.prefix = args[1];
+		
+		
+		if(args.length > 2)	{
+			RUN_GUI = Boolean.parseBoolean(args[2]);
+			
+			if(!RUN_GUI && args.length < 4)	{
+				throw new IllegalArgumentException("benchmark expects parameters: 'id' 'queue prefix' 'RUN_GUI (boolean)' 'number of chickens (int)' 'number of chocoRabbits (int)'");
+			}
+			
+			try	{
+				benchmarkChicks = Integer.parseInt(args[3]);
+				benchmarkChoco = Integer.parseInt(args[4]);
+			} catch (Exception e)	{
+				throw new IllegalArgumentException("number of chickens / rabbits has to be an integer");
+			}
+		}
 	}
 	
 	protected void initConsumer() {
@@ -82,7 +126,11 @@ public class Admin implements MessageListener, ProducerInterface {
 			
 			consumer = session.createConsumer(guiQueue);
 			
-			consumer.setMessageListener(this);
+			if(RUN_GUI)	{
+				consumer.setMessageListener(this);
+			} else	{
+				this.initBenchmark();
+			}
 			
 		} catch (NamingException e1) {
 			e1.printStackTrace();
@@ -90,6 +138,36 @@ public class Admin implements MessageListener, ProducerInterface {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * sets values for benchmark mode
+	 * @throws JMSException 
+	 * @throws NamingException 
+	 */
+	private void initBenchmark() throws JMSException, NamingException {
+		
+		// init listener
+		consumer.setMessageListener(new BenchmarkMessageListener());
+		
+		// lookup topic (start stop...)
+		benchTopic = (Topic) ctx.lookup("bench.topic");
+		benchSubscriber = session.createDurableSubscriber(benchTopic, "admin" + this.id);
+		benchSubscriber.setMessageListener(new BenchmarkStartStopListener());
+		
+		// init the chickens
+		benchRabbits = new ChocolateRabbitRabbit[benchmarkChoco];
+		benchChickens = new Chicken[benchmarkChicks];
+		
+		for(int i=0; i<benchmarkChoco; i++)	{
+			benchRabbits[i] = new ChocolateRabbitRabbit(new String[]{"" + chocoRabbitID.incrementAndGet(), "" + this.id,  this.prefix, "-1"}); 
+		}
+		
+		for(int i=0; i<benchmarkChicks; i++)	{
+			benchChickens[i] = new Chicken(new String[]{"" + chickenID.incrementAndGet(), "" + this.id, this.prefix, "-1"}); 
+		}
+		
+	}
+	
 
 	@Override
 	public void createProducers(int chicken, int eggs, int choco, int chocoRabbits) {
@@ -167,4 +245,125 @@ public class Admin implements MessageListener, ProducerInterface {
 		}
 	}
 
+	
+	/**
+	 * message listener for benchmark mode
+	 * @author ja
+	 *
+	 */
+	class BenchmarkMessageListener implements MessageListener	{
+		
+		@Override
+		public void onMessage(Message message) {
+			if(message instanceof ObjectMessage)	{
+				ObjectMessage om = (ObjectMessage) message;
+				try {
+					if(om.getObject() == null)	{
+						// do nothing
+					} else if(om.getObject() instanceof Nest)	{
+						
+						if(message.propertyExists("build"))	{
+							chocoCount--;
+							coloredEggCount-=2;
+							// TODO PRODUCE TO load balancing rabbit
+						}
+						
+						if(message.propertyExists("error"))	{
+							errorNestCount++;
+						}
+						
+						if(message.propertyExists("completed"))	{
+							completedNestCount++;
+						}
+						
+					} else	{
+						log.error("WRONG OBJECTDATA SENT");
+						return;
+					}
+				} catch(JMSException e)	{
+					e.printStackTrace();
+				}
+			} else if(message instanceof javax.jms.TextMessage)	{
+				
+				try {
+					// update egg count
+					if(message.propertyExists("eggCount"))	{
+						eggCount += message.getIntProperty("eggCount");
+						// TODO PRODUCE TO load balancing rabbit
+					}
+					
+					// add colored egg (removes not colored egg automatically)
+					if(message.propertyExists("eggColorCount"))	{
+						coloredEggCount += message.getIntProperty("eggColorCount");
+						eggCount -= message.getIntProperty("eggColorCount");
+						// TODO PRODUCE TO load balancing rabbit
+					}
+					
+					
+					if(message.propertyExists("chocoCount"))	{
+						chocoCount += message.getIntProperty("chocoCount");
+						// TODO PRODUCE TO load balancing rabbit
+					}
+					
+				} catch (JMSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else	{
+				log.error("RECIEVED AN INVALID MESSAGE");
+			}
+		}
+	}
+	
+	/**
+	 * message listener for benchmark mode
+	 * @author ja
+	 *
+	 */
+	class BenchmarkStartStopListener implements MessageListener	{
+
+		@Override
+		public void onMessage(Message message) {
+			try {
+				if(message instanceof TextMessage)	{
+					
+					// START
+					if(message.propertyExists("START"))	{
+						// set counter to 0
+						completedNestCount = 0;
+						errorNestCount = 0;
+						for(Chicken ck : benchChickens)	{
+							ck.start();
+						}
+						for(ChocolateRabbitRabbit rb : benchRabbits)	{
+							rb.start();
+						}
+					}
+					// STOP
+					if(message.propertyExists("STOP"))	{
+						int completed = completedNestCount;
+						int error = errorNestCount;
+						
+						for(ChocolateRabbitRabbit rb : benchRabbits)	{
+							rb.stopBenchmark();
+						}
+						for(Chicken ck : benchChickens)	{
+							ck.stopBenchmark();
+						}
+						
+						System.out.println("######################################");
+						System.out.println("# RESULT: ############################");
+						System.out.println("	completed: " + completed);
+						System.out.println("	error: " + error);
+						System.out.println("	---------------------");
+						System.out.println("	SUM: " + (error + completed));
+					}
+				}
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }
