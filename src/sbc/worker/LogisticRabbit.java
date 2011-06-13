@@ -111,7 +111,9 @@ public class LogisticRabbit extends Worker implements MessageListener {
 						replyMsg.setBooleanProperty("error", true);
 					}
 					
-					guiProducer.send(replyMsg);
+					if(!message.propertyExists("hideFromGUI"))	{
+						guiProducer.send(replyMsg);
+					}
 					nest = null;
 					log.info("#######################################");
 					log.info("###### LOGISTIC RABBIT - waiting for nest to ship...");
@@ -131,22 +133,22 @@ public class LogisticRabbit extends Worker implements MessageListener {
 	@Override
 	protected void close() {
 		try {
-			if(nest != null)	{
-				try {
-					ObjectMessage replyMsg = session.createObjectMessage(nest);
-					replyMsg.setBooleanProperty("hideFromGUI", true);
-					producer.send(replyMsg);
-				} catch (JMSException e) {
-				}
-			}
-			producer.close();
 			consumer.setMessageListener(null);
 			consumer.close();
-			session.close();
-			connection.stop();
-			connection.close();
-			ctx.close();
-			ctx = null;
+			if(nest != null)	{
+				try {
+					this.initCallbackProducer("logistic.queue");
+					ObjectMessage replyMsg = session.createObjectMessage(nest);
+					replyMsg.setBooleanProperty("hideFromGUI", true);
+					callbackProducer.send(replyMsg);
+					this.closeCallbackProducer();
+				} catch (JMSException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			this.closeGUIProducer();
+			this.closeProducer();
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (NamingException e) {

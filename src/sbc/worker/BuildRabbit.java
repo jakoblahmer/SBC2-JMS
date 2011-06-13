@@ -1,6 +1,5 @@
 package sbc.worker;
 
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
@@ -212,45 +211,38 @@ public class BuildRabbit extends Worker {
 	protected void close() {
 		close = true;
 		System.out.println("SHUTTING DOWN...");
-		if(currentNest != null)	{
-			ObjectMessage replyMsg;
-			if(currentNest.getEgg1() != null)	{
-				try {
-					replyMsg = session.createObjectMessage(currentNest.getEgg1());
-					replyMsg.setBooleanProperty("hideFromGUI", true);
-					producer.send(replyMsg);
-				} catch (JMSException e) {
-				}
-			}
-			if(currentNest.getEgg2() != null)	{
-				try {
-					replyMsg = session.createObjectMessage(currentNest.getEgg2());
-					replyMsg.setBooleanProperty("hideFromGUI", true);
-					producer.send(replyMsg);
-				} catch (JMSException e) {
-				}
-			}
-			if(currentNest.getRabbit() != null)	{
-				try {
-					replyMsg = session.createObjectMessage(currentNest.getRabbit());
-					replyMsg.setBooleanProperty("hideFromGUI", true);
-					producer.send(replyMsg);
-				} catch (JMSException e) {
-				}
-			}
-		}
+
 		try {
-			producer.close();
 			consumer.setMessageListener(null);
 			consumer.close();
-			session.close();
-			connection.stop();
-			connection.close();
-			ctx.close();
-			ctx = null;
+			
+			if(currentNest != null)	{
+				this.initCallbackProducer("build.queue");
+				ObjectMessage replyMsg;
+				if(currentNest.getEgg1() != null)	{
+					replyMsg = session.createObjectMessage(currentNest.getEgg1());
+					replyMsg.setBooleanProperty("hideFromGUI", true);
+					callbackProducer.send(replyMsg);
+				}
+				if(currentNest.getEgg2() != null)	{
+					replyMsg = session.createObjectMessage(currentNest.getEgg2());
+					replyMsg.setBooleanProperty("hideFromGUI", true);
+					callbackProducer.send(replyMsg);
+				}
+				if(currentNest.getRabbit() != null)	{
+					replyMsg = session.createObjectMessage(currentNest.getRabbit());
+					replyMsg.setBooleanProperty("hideFromGUI", true);
+					callbackProducer.send(replyMsg);
+				}
+				this.closeCallbackProducer();
+			}
+			
+			this.closeGUIProducer();
+			this.closeProducer();
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (NamingException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally	{
 			System.exit(0);
