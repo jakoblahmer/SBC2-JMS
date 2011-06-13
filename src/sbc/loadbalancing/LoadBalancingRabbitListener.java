@@ -15,8 +15,8 @@ import javax.naming.NamingException;
 public class LoadBalancingRabbitListener extends Thread implements MessageListener {
 
 	private String controlConsumerName = "gui.queue";
-	private String eggConsumerName = "gui.queue";
-	private String chocoConsumerName = "gui.queue";
+	private String eggConsumerName = "color.queue";
+	private String chocoConsumerName = "build.queue";
 	private InitialContext ctx;
 	private QueueSession session;
 	private QueueConnectionFactory connectionFactory;
@@ -24,6 +24,8 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 	private String prefix;
 	private ILoadBalancingCallback callback;
 	private MessageConsumer controlConsumer;
+	private MessageConsumer eggConsumer;
+	private MessageConsumer chocoConsumer;
 
 	public LoadBalancingRabbitListener(String prefix) {
 		this.prefix = prefix;
@@ -62,10 +64,11 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 			Queue consumerQueue = (Queue) ctx.lookup(prefix + "." + controlConsumerName);
 			controlConsumer = session.createConsumer(consumerQueue);
 			
-			consumerQueue = (Queue) ctx.lookup(prefix + "." + controlConsumerName);
-			controlConsumer = session.createConsumer(consumerQueue);
+			Queue eggConsumerQueue = (Queue) ctx.lookup(prefix + "." + eggConsumerName);
+			eggConsumer = session.createConsumer(eggConsumerQueue);
 			
-			
+			Queue chocoConsumerQueue = (Queue) ctx.lookup(prefix + "." + chocoConsumerName);
+			chocoConsumer = session.createConsumer(chocoConsumerQueue);
 			
 			controlConsumer.setMessageListener(this);
 		} catch (JMSException e) {

@@ -5,12 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
-import javax.jms.TextMessage;
 
 import org.apache.log4j.Logger;
-import org.mozartspaces.capi3.AnyCoordinator;
-import org.mozartspaces.core.Entry;
-import org.mozartspaces.core.MzsCoreException;
 
 import sbc.jmsmodel.Egg;
 
