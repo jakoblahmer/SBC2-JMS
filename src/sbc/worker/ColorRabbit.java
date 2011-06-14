@@ -70,7 +70,7 @@ public class ColorRabbit extends Worker implements MessageListener {
 		
 		this.egg = null;
 		
-		this.addShutdownHook();
+//		this.addShutdownHook();
 		this.initConsumer();
 	}
 
@@ -149,8 +149,7 @@ public class ColorRabbit extends Worker implements MessageListener {
 						for(Colors col : Colors.values())	{
 							replyMsg.setStringProperty(col.toString(), (egg.getColor().contains(col.toString()) ? "1" : "0"));
 						}
-						log.debug(this.color + " SENT TO COLOR QUEUE: " + egg + ")");
-						replyMsg.setJMSPriority(egg.getColor().size());
+						replyMsg.setJMSPriority(9);
 						notCompletelyColoredProducer.send(replyMsg);
 					}
 					

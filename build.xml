@@ -3,11 +3,13 @@
     
     <property environment="env"/>
     <property name="glassfish.home" value="${env.GLASSFISH_HOME}"/>
-
-    <property name="src.dir" value="src"/>
+    <property name="domain.dir" value="${glassfish.home}/domains/domain1"/>
+    <property name="admin.cli.jar" value="${glassfish.home}/modules/admin-cli.jar"/>
+    
+	<property name="src.dir" value="src"/>
     <property name="build.dir" value="build"/>
-	<property name="libGlobal.dir" value="../SBC2-GLOBAL/lib"/>
-	<property name="distGlobal.dir" value="../SBC2-GLOBAL/dist"/>
+	<property name="libGlobal.dir" value="../sbc2_global/lib"/>
+	<property name="distGlobal.dir" value="../sbc2_global/dist"/>
     
     <path id="classpath">
         <fileset dir="${glassfish.home}/lib">
@@ -30,6 +32,25 @@
 		<copy file="${src.dir}/log4j.properties" tofile="${build.dir}/log4j.properties"/>
     </target>
 
+	
+	<!-- BENCHMARK SERVER -->
+	<target name="run-benchmark" depends="compile">
+		<java classname="sbc.benchmark.BenchmarkServer" 
+			fork="true"
+			classpathref="classpath">
+			<arg line="4444 1"/>
+		</java>
+	</target>
+	
+	<target name="run-benchmarkAdmin" depends="compile">
+		<java classname="sbc.admin.Admin" 
+			fork="true"
+			classpathref="classpath">
+			<arg line="1 sbc false 1 1"/>
+		</java>
+	</target>
+	
+	
 	<target name="run-admin" depends="compile">
 	    <java classname="sbc.admin.Admin" 
 	          fork="true"
@@ -176,8 +197,33 @@
 		</java>
     </target>
 	
-    <target name="clean">
+    <target name="clean" depends="flushAll">
         <delete dir="${build.dir}"/>
     </target>
     
+	<target name="flushAll">
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype queue sbc.color.queue"/>
+		</java>
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype queue sbc.build.queue"/>
+		</java>
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype queue sbc.logistic.queue"/>
+		</java>
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype queue sbc.test.queue"/>
+		</java>
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype queue sbc.gui.queue"/>
+		</java>
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype queue bench.result.queue"/>
+		</java>
+		<java jar="${admin.cli.jar}" fork="true" spawn="false">
+			<arg line="flush-jmsdest --desttype topic bench.topic"/>
+		</java>
+		
+	</target>
+	
 </project>

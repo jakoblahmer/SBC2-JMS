@@ -50,6 +50,7 @@ public class ChocolateRabbitRabbit extends Producer {
 				
 					message.setObject(cr);
 					message.setStringProperty("product", "chocolateRabbit");
+					producer.send(message);
 					
 					// write to gui
 					guiMsg = session.createTextMessage();
@@ -64,9 +65,9 @@ public class ChocolateRabbitRabbit extends Producer {
 				
 				counter++;
 				
-				if(counter > 300)	{
+				if(counter > 200)	{
 					try {
-						sleep(100);
+						sleep(1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

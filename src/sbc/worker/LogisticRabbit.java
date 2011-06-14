@@ -38,7 +38,7 @@ public class LogisticRabbit extends Worker implements MessageListener {
 		
 		nest = null;
 		
-		this.addShutdownHook();
+//		this.addShutdownHook();
 		
 		this.initConsumer();
 		
@@ -92,14 +92,12 @@ public class LogisticRabbit extends Worker implements MessageListener {
 				if(om.getObject() instanceof Nest)	{
 					nest = (Nest) om.getObject();
 					
-					log.info("###### RECEIVED a nest (id: " + nest.getId() + ")");
-					
 //					int sleep = new Random().nextInt(3) + 1;
 //					Thread.sleep(sleep * 1000);
 					
 					nest.setShipped(true);
 					nest.setShipper_id(this.id);
-					log.info("###### NEST (id: " + nest.getId() + ") shipped!");
+					log.info("###### NEST (id: " + nest.getIdAsString() + ") shipped!");
 					
 					ObjectMessage replyMsg = session.createObjectMessage(nest);
 					
@@ -115,10 +113,6 @@ public class LogisticRabbit extends Worker implements MessageListener {
 						guiProducer.send(replyMsg);
 					}
 					nest = null;
-					log.info("#######################################");
-					log.info("###### LOGISTIC RABBIT - waiting for nest to ship...");
-					log.info("#######################################");
-
 				}
 //			} catch (InterruptedException e) {
 //				this.close();

@@ -57,7 +57,7 @@ public class BuildRabbit extends Worker {
 		
 		currentNest = null;
 		eggCount = chocoCount = 0;
-		this.addShutdownHook();
+//		this.addShutdownHook();
 		this.initConsumer();
 	}
 
@@ -104,7 +104,6 @@ public class BuildRabbit extends Worker {
 		while(!close)	{
 
 			try {
-				log.info("AWAITING MESSAGE");
 				message = consumer.receive(3000);
 			} catch (JMSException e1) {
 				log.info("PRODUCED ERROR");

@@ -56,6 +56,7 @@ public class Chicken extends Producer {
 					
 					message.setObject(egg);
 					message.setStringProperty("NOCOLOR", "1");
+					message.setJMSPriority(0);
 					producer.send(message);
 	
 					// write to gui
@@ -68,9 +69,8 @@ public class Chicken extends Producer {
 				counter++;
 				
 				if(counter > 300)	{
-					log.info("SLEEP");
 					try {
-						sleep(100);
+						sleep(1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -112,6 +112,7 @@ public class Chicken extends Producer {
 				
 				message.setObject(egg);
 				message.setStringProperty("NOCOLOR", "1");
+				message.setJMSPriority(0);
 				producer.send(message);
 
 				// write to gui

@@ -43,7 +43,7 @@ public class TestRabbit extends Worker implements MessageListener {
 		
 		nest = null;
 		
-		this.addShutdownHook();
+//		this.addShutdownHook();
 		
 		this.initConsumer();
 		
@@ -58,7 +58,6 @@ public class TestRabbit extends Worker implements MessageListener {
             public void run() {
             	log.info("SHUTDOWN...");
             	close();
-            	this.destroy();
             }
         });
 	}
@@ -90,7 +89,6 @@ public class TestRabbit extends Worker implements MessageListener {
 
 	@Override
 	public void onMessage(Message message) {
-		log.debug("RECEIVED SOMETHING ");
 		if(message instanceof ObjectMessage)	{
 			ObjectMessage om = (ObjectMessage) message;
 			try {
@@ -120,10 +118,6 @@ public class TestRabbit extends Worker implements MessageListener {
 					}
 					
 					nest = null;
-					log.info("#######################################");
-					log.info("###### TEST RABBIT - waiting for nest to ship...");
-					log.info("#######################################");
-
 				}
 //			} catch (InterruptedException e) {
 //				this.close();

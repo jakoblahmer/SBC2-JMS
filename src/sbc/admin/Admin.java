@@ -2,10 +2,13 @@ package sbc.admin;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -14,6 +17,8 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -33,10 +38,10 @@ public class Admin implements MessageListener, ProducerInterface {
 	private int id = 1;
 	
 	private InitialContext ctx;
-	private QueueConnectionFactory connectionFactory;
+	private ConnectionFactory connectionFactory;
 	private Queue guiQueue;
-	private QueueConnection connection;
-	private QueueSession session;
+	private Connection connection;
+	private Session session;
 	private MessageConsumer consumer;
 
 	private AdminGUI gui;
@@ -66,6 +71,10 @@ public class Admin implements MessageListener, ProducerInterface {
 	private int eggCount = 0;
 	private int coloredEggCount = 0;
 	private int chocoCount = 0;
+
+	private Queue resultQueue;
+
+	private MessageProducer resultProducer;
 	
 	
 	public static void main(String[] args)	{
@@ -114,16 +123,19 @@ public class Admin implements MessageListener, ProducerInterface {
 		}
 	}
 	
+	
 	protected void initConsumer() {
 		try {
 			ctx = new InitialContext();
-			connectionFactory = (QueueConnectionFactory) ctx.lookup("SBC.Factory");
+			connectionFactory = (ConnectionFactory) ctx.lookup("SBC.Factory");
 			guiQueue = (Queue) ctx.lookup(this.prefix + ".gui.queue");
-			connection = connectionFactory.createQueueConnection();
+			
+			connection = connectionFactory.createConnection();
+			
+			connection.setClientID("admin" + this.id);
 			connection.start();
 			
-			session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-			
+			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			consumer = session.createConsumer(guiQueue);
 			
 			if(RUN_GUI)	{
@@ -151,8 +163,17 @@ public class Admin implements MessageListener, ProducerInterface {
 		
 		// lookup topic (start stop...)
 		benchTopic = (Topic) ctx.lookup("bench.topic");
-		benchSubscriber = session.createDurableSubscriber(benchTopic, "admin" + this.id);
+		
+		connection.stop();
+		
+		benchSubscriber = ((TopicSession) session).createSubscriber(benchTopic);
 		benchSubscriber.setMessageListener(new BenchmarkStartStopListener());
+		
+		connection.start();
+		
+		// result queue
+		resultQueue = (Queue) ctx.lookup("bench.result.queue");
+		resultProducer = session.createProducer(resultQueue);
 		
 		// init the chickens
 		benchRabbits = new ChocolateRabbitRabbit[benchmarkChoco];
@@ -322,13 +343,23 @@ public class Admin implements MessageListener, ProducerInterface {
 	 */
 	class BenchmarkStartStopListener implements MessageListener	{
 
+		
 		@Override
 		public void onMessage(Message message) {
+			try {
+				if(message.getJMSRedelivered())
+					return;
+			} catch (JMSException e1) {
+				// TODO Auto-generated catch block
+			}
+			
+			
 			try {
 				if(message instanceof TextMessage)	{
 					
 					// START
 					if(message.propertyExists("START"))	{
+						System.out.println("START");
 						// set counter to 0
 						completedNestCount = 0;
 						errorNestCount = 0;
@@ -341,6 +372,7 @@ public class Admin implements MessageListener, ProducerInterface {
 					}
 					// STOP
 					if(message.propertyExists("STOP"))	{
+						System.out.println("STOP");
 						int completed = completedNestCount;
 						int error = errorNestCount;
 						
@@ -351,19 +383,57 @@ public class Admin implements MessageListener, ProducerInterface {
 							ck.stopBenchmark();
 						}
 						
+						System.out.println("eggCount: " + eggCount);
+						System.out.println("coloredEggCount: " + coloredEggCount);
+						System.out.println("chocoCount: " + chocoCount);
+						System.out.println("######################################");
+						System.out.println("######################################");
+						System.out.println("######################################");
 						System.out.println("######################################");
 						System.out.println("# RESULT: ############################");
 						System.out.println("	completed: " + completed);
 						System.out.println("	error: " + error);
 						System.out.println("	---------------------");
 						System.out.println("	SUM: " + (error + completed));
+						
+						TextMessage msg = session.createTextMessage();
+						msg.setIntProperty("completed", completed);
+						msg.setIntProperty("error", error);
+						resultProducer.send(msg);
+						
 					}
 				}
-			} catch (JMSException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				close();
 			}
 		}
 	}
-	
+
+	/**
+	 * closes the admin
+	 */
+	private void close() {
+		try {
+			if(!RUN_GUI)	{
+				benchSubscriber.close();
+				resultProducer.close();
+			}
+			consumer.close();
+			connection.close();
+			connectionFactory = null;
+			ctx.close();
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		} finally	{
+			System.exit(0);
+		}
+	}
 }
+
+
