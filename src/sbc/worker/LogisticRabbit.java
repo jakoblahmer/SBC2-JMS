@@ -133,7 +133,7 @@ public class LogisticRabbit extends Worker implements MessageListener {
 				try {
 					this.initCallbackProducer("logistic.queue");
 					ObjectMessage replyMsg = session.createObjectMessage(nest);
-					replyMsg.setBooleanProperty("hideFromGUI", true);
+					//replyMsg.setBooleanProperty("hideFromGUI", true);
 					callbackProducer.send(replyMsg);
 					this.closeCallbackProducer();
 				} catch (JMSException e) {

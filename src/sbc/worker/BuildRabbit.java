@@ -220,17 +220,17 @@ public class BuildRabbit extends Worker {
 				ObjectMessage replyMsg;
 				if(currentNest.getEgg1() != null)	{
 					replyMsg = session.createObjectMessage(currentNest.getEgg1());
-					replyMsg.setBooleanProperty("hideFromGUI", true);
+					//replyMsg.setBooleanProperty("hideFromGUI", true);
 					callbackProducer.send(replyMsg);
 				}
 				if(currentNest.getEgg2() != null)	{
 					replyMsg = session.createObjectMessage(currentNest.getEgg2());
-					replyMsg.setBooleanProperty("hideFromGUI", true);
+					//replyMsg.setBooleanProperty("hideFromGUI", true);
 					callbackProducer.send(replyMsg);
 				}
 				if(currentNest.getRabbit() != null)	{
 					replyMsg = session.createObjectMessage(currentNest.getRabbit());
-					replyMsg.setBooleanProperty("hideFromGUI", true);
+					//replyMsg.setBooleanProperty("hideFromGUI", true);
 					callbackProducer.send(replyMsg);
 				}
 				this.closeCallbackProducer();

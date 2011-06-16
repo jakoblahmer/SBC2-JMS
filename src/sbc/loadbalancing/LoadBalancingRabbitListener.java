@@ -1,5 +1,8 @@
 package sbc.loadbalancing;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -7,6 +10,7 @@ import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.InitialContext;
@@ -15,8 +19,8 @@ import javax.naming.NamingException;
 public class LoadBalancingRabbitListener extends Thread implements MessageListener {
 
 	private String controlConsumerName = "gui.queue";
-	private String eggConsumerName = "color.queue";
-	private String chocoConsumerName = "build.queue";
+	private String eggQueueName = "color.queue";
+	private String chocoQueueName = "build.queue";
 	private InitialContext ctx;
 	private QueueSession session;
 	private QueueConnectionFactory connectionFactory;
@@ -26,6 +30,10 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 	private MessageConsumer controlConsumer;
 	private MessageConsumer eggConsumer;
 	private MessageConsumer chocoConsumer;
+	private QueueSender eggProducer;
+	private QueueSender chocoProducer;
+	private final static String messageSelectorCHOCO = "product = 'chocolateRabbit'";
+	private static final long CONSUMER_TIMEOUT = 100; 
 
 	public LoadBalancingRabbitListener(String prefix) {
 		this.prefix = prefix;
@@ -64,11 +72,13 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 			Queue consumerQueue = (Queue) ctx.lookup(prefix + "." + controlConsumerName);
 			controlConsumer = session.createConsumer(consumerQueue);
 			
-			Queue eggConsumerQueue = (Queue) ctx.lookup(prefix + "." + eggConsumerName);
-			eggConsumer = session.createConsumer(eggConsumerQueue);
+			Queue eggQueue = (Queue) ctx.lookup(prefix + "." + eggQueueName);
+			eggConsumer = session.createConsumer(eggQueue);
+			eggProducer = (QueueSender) session.createProducer(eggQueue);
 			
-			Queue chocoConsumerQueue = (Queue) ctx.lookup(prefix + "." + chocoConsumerName);
-			chocoConsumer = session.createConsumer(chocoConsumerQueue);
+			Queue chocoQueue = (Queue) ctx.lookup(prefix + "." + chocoQueueName);
+			chocoConsumer = session.createConsumer(chocoQueue, messageSelectorCHOCO);
+			chocoProducer = (QueueSender) session.createProducer(chocoQueue);
 			
 			controlConsumer.setMessageListener(this);
 		} catch (JMSException e) {
@@ -92,9 +102,53 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 			e.printStackTrace();
 		} catch (NamingException e) {
 			e.printStackTrace();
-		} 
+		}
+	}
+	
+	public ArrayList<Message> takeEggs(int amount) {
+		ArrayList<Message> list = new ArrayList<Message>();
+		for (int i = 0; i < amount; i++) {
+			try {
+				list.add(eggConsumer.receive(CONSUMER_TIMEOUT));
+			} catch (JMSException e) {
+				break;
+			}
+		}
+		return list;
 	}
 
+	public void putEggs(List<Message> messages) {
+		for (Message message : messages) {
+			try {
+				eggProducer.send(message);
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public ArrayList<Message> takeChokobunnies(int amount) {
+		ArrayList<Message> list = new ArrayList<Message>();
+		for (int i = 0; i < amount; i++) {
+			try {
+				list.add(chocoConsumer.receive(CONSUMER_TIMEOUT));
+			} catch (JMSException e) {
+				break;
+			}
+		}
+		return list;
+	}
+
+	public void putChokobunnies(List<Message> messages) {
+		for (Message message : messages) {
+			try {
+				chocoProducer.send(message);
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	@Override
 	public void onMessage(Message message) {
 		try {
@@ -110,6 +164,9 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 					callback.addChocolateRabbits(prefix, amount);
 				}
 			}
-		} catch (JMSException e) {}
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
 	}
+
 }

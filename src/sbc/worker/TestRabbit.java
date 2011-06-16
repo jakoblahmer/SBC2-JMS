@@ -137,7 +137,7 @@ public class TestRabbit extends Worker implements MessageListener {
 				try {
 					this.initCallbackProducer("test.queue");
 					ObjectMessage replyMsg = session.createObjectMessage(nest);
-					replyMsg.setBooleanProperty("hideFromGUI", true);
+					//replyMsg.setBooleanProperty("hideFromGUI", true);
 					callbackProducer.send(replyMsg);
 					this.closeCallbackProducer();
 				} catch (JMSException e) {

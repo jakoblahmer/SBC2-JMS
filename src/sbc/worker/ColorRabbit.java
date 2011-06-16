@@ -184,7 +184,7 @@ public class ColorRabbit extends Worker implements MessageListener {
 					for(Colors col : Colors.values())	{
 						replyMsg.setStringProperty(col.toString(), (egg.getColor().contains(col.toString()) ? "1" : "0"));
 					}
-					replyMsg.setBooleanProperty("hideFromGUI", true);
+					//replyMsg.setBooleanProperty("hideFromGUI", true);
 					notCompletelyColoredProducer.send(replyMsg);
 					
 				} catch (Exception e) {

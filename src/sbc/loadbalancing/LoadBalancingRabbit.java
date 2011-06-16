@@ -3,11 +3,9 @@ package sbc.loadbalancing;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.QueueSession;
-import javax.naming.InitialContext;
+import javax.jms.Message;
 
 import org.apache.log4j.Logger;
 
@@ -23,20 +21,11 @@ public class LoadBalancingRabbit implements ILoadBalancingCallback {
 	public static final int maxEggColoredFactor = 6;
 	public static final int maxChocoRabbitFactor = 5;
 	
-	private int id;
+	protected int id;
 
 	private String[] prefixes;
 
-	private InitialContext ctx;
-
-	private QueueConnectionFactory connectionFactory;
-
-	private QueueConnection connection;
-
-	private QueueSession session;
-
-	private ArrayList<LoadBalancingRabbitListener> listeners = new ArrayList<LoadBalancingRabbitListener>();
-
+	private HashMap<String, LoadBalancingRabbitListener> listeners = new HashMap<String, LoadBalancingRabbitListener>();
 	private HashMap<String, Integer> eggCount = new HashMap<String, Integer>();
 	private HashMap<String, Integer> chocoCount = new HashMap<String, Integer>();
 	
@@ -78,7 +67,7 @@ public class LoadBalancingRabbit implements ILoadBalancingCallback {
 			
 			LoadBalancingRabbitListener listener = new LoadBalancingRabbitListener(prefix);
 			listener.setProductListener(this);
-			listeners.add(listener);
+			listeners.put(prefix, listener);
 		}
 	}
 
@@ -93,8 +82,54 @@ public class LoadBalancingRabbit implements ILoadBalancingCallback {
 		chocoCount.put(factory, chocoCount.get(factory)+amount);
 		if (loadbalanceActive) balance();
 	}
-	
+
+	/**
+	 * uses eggCount and chocoCount to check which factories have to give eggs and which have to consume
+	 * and use .takeXX() and .putXX()
+	 */
 	protected synchronized void balance() {
+		// ChocoBunnies
+		Integer average = 0;
+		for (Integer value : chocoCount.values()) {
+			average += value;
+		}
+		average /= chocoCount.size();
 		
+		ArrayList<Message> chocoBunnies = new ArrayList<Message>();
+		for ( Entry<String, Integer> entry : chocoCount.entrySet()) {
+			if (entry.getValue() > average) {
+				chocoBunnies.addAll(listeners.get(entry.getKey()).takeChokobunnies(entry.getValue() - average));
+			}
+		}
+		int fromIndex = 0;
+		for ( Entry<String, Integer> entry : chocoCount.entrySet()) {
+			if (entry.getValue() < average) {
+				int toIndex = Math.min(chocoBunnies.size(), fromIndex + (entry.getValue() - average));
+				listeners.get(entry.getKey()).putChokobunnies(chocoBunnies.subList(fromIndex, toIndex));
+				fromIndex = toIndex;
+			}
+		}
+		
+		// Eggs
+		average = 0;
+		for (Integer value : eggCount.values()) {
+			average += value;
+		}
+		average /= eggCount.size();
+		
+		ArrayList<Message> eggs = new ArrayList<Message>();
+		for ( Entry<String, Integer> entry : eggCount.entrySet()) {
+			if (entry.getValue() > average) {
+				eggs.addAll(listeners.get(entry.getKey()).takeChokobunnies(entry.getValue() - average));
+			}
+		}
+		fromIndex = 0;
+		for ( Entry<String, Integer> entry : chocoCount.entrySet()) {
+			if (entry.getValue() < average) {
+				int toIndex = Math.min(eggs.size(), fromIndex + (entry.getValue() - average));
+				listeners.get(entry.getKey()).putEggs(eggs.subList(fromIndex, toIndex));
+				fromIndex = toIndex;
+			}
+		}
 	}
 }
