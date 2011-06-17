@@ -1,36 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="SBC2_JMS" default="compile" basedir=".">
-    
-    <property environment="env"/>
-    <property name="glassfish.home" value="${env.GLASSFISH_HOME}"/>
-    <property name="domain.dir" value="${glassfish.home}/domains/domain1"/>
-    <property name="admin.cli.jar" value="${glassfish.home}/modules/admin-cli.jar"/>
-    
+	
+	<property environment="env"/>
+	<property name="glassfish.home" value="${env.GLASSFISH_HOME}"/>
+	<property name="domain.dir" value="${glassfish.home}/domains/domain1"/>
+	<property name="admin.cli.jar" value="${glassfish.home}/modules/admin-cli.jar"/>
+	
 	<property name="src.dir" value="src"/>
-    <property name="build.dir" value="build"/>
+	<property name="build.dir" value="build"/>
 	<property name="libGlobal.dir" value="../SBC2-GLOBAL/lib"/>
 	<property name="distGlobal.dir" value="../SBC2-GLOBAL/dist"/>
-    
-    <path id="classpath">
-        <fileset dir="${glassfish.home}/lib">
-            <include name="javaee.jar"/>
-            <include name="appserv-rt.jar"/>
-            <include name="gf-client.jar"/>
-        </fileset>
+	
+	<path id="classpath">
+		<fileset dir="${glassfish.home}/lib">
+			<include name="javaee.jar"/>
+			<include name="appserv-rt.jar"/>
+			<include name="gf-client.jar"/>
+		</fileset>
 		<fileset dir="${libGlobal.dir}" includes="**/*.jar" />
 		<fileset dir="${distGlobal.dir}" includes="**/*.jar" />
-    	<pathelement location="${build.dir}"/>
-    </path>
-    
-    <target name="compile">
-        <mkdir dir="${build.dir}"/>
-        <javac srcdir="${src.dir}"
-               destdir="${build.dir}"
-               debug="on"
-               deprecation="on"
-               classpathref="classpath"/>
+		<pathelement location="${build.dir}"/>
+	</path>
+	
+	<target name="compile">
+		<mkdir dir="${build.dir}"/>
+		<javac srcdir="${src.dir}"
+				destdir="${build.dir}"
+				debug="on"
+				deprecation="on"
+				classpathref="classpath"/>
 		<copy file="${src.dir}/log4j.properties" tofile="${build.dir}/log4j.properties"/>
-    </target>
+	</target>
 
 	
 	<!-- BENCHMARK SERVER -->
@@ -41,23 +41,6 @@
 			<arg line="4444 1"/>
 		</java>
 	</target>
-	
-	<target name="run-benchmarkAdmin" depends="compile">
-		<java classname="sbc.admin.Admin" 
-			fork="true"
-			classpathref="classpath">
-			<arg line="1 sbc false 1 1"/>
-		</java>
-	</target>
-	
-	
-	<target name="run-admin" depends="compile">
-	    <java classname="sbc.admin.Admin" 
-	          fork="true"
-	          classpathref="classpath">
-			<arg line="1 sbc"/>
-		</java>
-    </target>
 	
 	<!--
 	
@@ -79,145 +62,293 @@
 	testRabbit:			4
 	logisticRabbit:		5
 	buildRabbit:		6
-	loadBalancerRabbit: 7
+	benchmarkadmin:		7
+	loadBalancerRabbit: 8
 	
 	-->
 	
-	<!-- factory 1 producers -->
-	<target name="run-factory1-producer" depends="compile">
-		<parallel failonany="true">
-			<!-- 3 chicken -->
-	        <java classname="sbc.producer.Chicken" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="110 1 sbc"/>
-			</java>
-	        <java classname="sbc.producer.Chicken" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="111 1 sbc"/>
-			</java>
-	        <java classname="sbc.producer.Chicken" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="111 1 sbc"/>
-			</java>
-			
-			<!-- 2 chocobunnies -->
-	        <java classname="sbc.producer.ChocolateRabbitRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="120 1 sbc"/>
-			</java>
-	        <java classname="sbc.producer.ChocolateRabbitRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="121 1 sbc"/>
-			</java>
-		</parallel>
-	</target>
+	<!--
+			FACTORY 1
+	-->
 	
 	<!-- factory 1 workers -->
 	<target name="run-factory1-workers" depends="compile">
 		<parallel failonany="true">
+			<!-- 1 admin -->
+			<java classname="sbc.admin.Admin" 
+				fork="true"
+				classpathref="classpath">
+				<arg line="1 sbc false 3 2"/>
+			</java>
+
 			<!-- 10 color rabbits -->
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="130 sbc RED"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="130 sbc RED"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="131 sbc GREEN"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="131 sbc GREEN"/>
 			</java>
-		    <java classname="sbc.worker.ColorRabbit" 
-		          fork="true"
-		          classpathref="classpath">
-		    	<arg line="132 sbc BLUE"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="132 sbc BLUE"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="133 sbc YELLOW"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="133 sbc YELLOW"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="134 sbc RED"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="134 sbc RED"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="135 sbc GREEN"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="135 sbc GREEN"/>
 			</java>
-		    <java classname="sbc.worker.ColorRabbit" 
-		          fork="true"
-		          classpathref="classpath">
-		    	<arg line="136 sbc BLUE"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="136 sbc BLUE"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="137 sbc YELLOW"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="137 sbc YELLOW"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="138 sbc RED"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="138 sbc RED"/>
 			</java>
-	        <java classname="sbc.worker.ColorRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="139 sbc GREEN"/>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="139 sbc GREEN"/>
 			</java>
 			
 			<!-- 2 testbunnies -->
-	        <java classname="sbc.worker.TestRabbit" 
-	              fork="true"
-	              classpathref="classpath" failonerror="true">
-	        	<arg line="140 sbc"/>
+			<java classname="sbc.worker.TestRabbit" 
+					fork="true"
+					classpathref="classpath" failonerror="true">
+				<arg line="140 sbc"/>
 			</java>
-	        <java classname="sbc.worker.TestRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="141 sbc"/>
+			<java classname="sbc.worker.TestRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="141 sbc"/>
 			</java>
 			
 			<!-- 1 logistic rabbit -->
-	        <java classname="sbc.worker.LogisticRabbit" 
-	              fork="true"
-	              classpathref="classpath" failonerror="true">
-	        	<arg line="150 sbc"/>
+			<java classname="sbc.worker.LogisticRabbit" 
+					fork="true"
+					classpathref="classpath" failonerror="true">
+				<arg line="150 sbc"/>
 			</java>
 			
 			<!-- 2 build rabbits -->
-		    <java classname="sbc.worker.BuildRabbit" 
-		          fork="true"
-		          classpathref="classpath">
-		    	<arg line="161 sbc"/>
+			<java classname="sbc.worker.BuildRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="161 sbc"/>
 			</java>
-	        <java classname="sbc.worker.BuildRabbit" 
-	              fork="true"
-	              classpathref="classpath">
-	        	<arg line="162 sbc"/>
+			<java classname="sbc.worker.BuildRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="162 sbc"/>
 			</java>
 		</parallel>
 	</target>
 	
 	
-    <target name="run-loadBalancingRabbit" depends="compile">
-        <java classname="sbc.loadbalancing." 
-              fork="true"
-              classpathref="classpath">
-        	<arg line="470 sbc"/>
-		</java>
-    </target>
+	<!--
+			FACTORY 2
+	-->
 	
-    <target name="clean" depends="flushAll">
-        <delete dir="${build.dir}"/>
-    </target>
-    
+	<!-- factory 2 workers -->
+	<target name="run-factory2-workers" depends="compile">
+		<parallel failonany="true">
+			<!-- 1 admin -->
+			<java classname="sbc.admin.Admin" 
+				fork="true"
+				classpathref="classpath">
+				<arg line="2 sbc1 false 1 2"/>
+			</java>
+
+			<!-- 6 color rabbits -->
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="230 sbc1 RED"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="231 sbc1 GREEN"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="232 sbc1 BLUE"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="233 sbc1 YELLOW"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="234 sbc1 RED"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="235 sbc1 GREEN"/>
+			</java>
+			
+			<!-- 2 testbunnies -->
+			<java classname="sbc.worker.TestRabbit" 
+					fork="true"
+					classpathref="classpath" failonerror="true">
+				<arg line="240 sbc1"/>
+			</java>
+			<java classname="sbc.worker.TestRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="241 sbc1"/>
+			</java>
+			
+			<!-- 1 logistic rabbit -->
+			<java classname="sbc.worker.LogisticRabbit" 
+					fork="true"
+					classpathref="classpath" failonerror="true">
+				<arg line="250 sbc1"/>
+			</java>
+			
+			<!-- 2 build rabbits -->
+			<java classname="sbc.worker.BuildRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="261 sbc1"/>
+			</java>
+		</parallel>
+	</target>
+			
+			
+	<!--
+			FACTORY 3
+	-->
+	
+	<!-- factory 2 workers -->
+	<target name="run-factory3-workers" depends="compile">
+		<parallel failonany="true">
+			<!-- 1 admin -->
+			<java classname="sbc.admin.Admin" 
+				fork="true"
+				classpathref="classpath">
+				<arg line="3 sbc2 false 6 3"/>
+			</java>
+
+			<!-- 8 color rabbits -->
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="330 sbc2 RED"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="331 sbc2 GREEN"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="332 sbc2 BLUE"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="333 sbc2 YELLOW"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="334 sbc2 RED"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="335 sbc2 GREEN"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="336 sbc2 BLUE"/>
+			</java>
+			<java classname="sbc.worker.ColorRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="337 sbc2 YELLOW"/>
+			</java>
+			
+			<!-- 2 testbunnies -->
+			<java classname="sbc.worker.TestRabbit" 
+					fork="true"
+					classpathref="classpath" failonerror="true">
+				<arg line="340 sbc2"/>
+			</java>
+			<java classname="sbc.worker.TestRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="341 sbc2"/>
+			</java>
+			
+			<!-- 1 logistic rabbit -->
+			<java classname="sbc.worker.LogisticRabbit" 
+					fork="true"
+					classpathref="classpath" failonerror="true">
+				<arg line="350 sbc2"/>
+			</java>
+			
+			<!-- 2 build rabbits -->
+			<java classname="sbc.worker.BuildRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="360 sbc2"/>
+			</java>
+			<java classname="sbc.worker.BuildRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="361 sbc2"/>
+			</java>
+			<java classname="sbc.worker.BuildRabbit" 
+					fork="true"
+					classpathref="classpath">
+				<arg line="362 sbc2"/>
+			</java>
+		</parallel>
+	</target>
+	
+	
+	<target name="run-loadBalancingRabbit" depends="compile">
+		<java classname="sbc.loadbalancing." 
+				fork="true"
+				classpathref="classpath">
+			<arg line="470 sbc"/>
+		</java>
+	</target>
+	
+	<target name="clean" depends="flushAll">
+		<delete dir="${build.dir}"/>
+	</target>
+	
 	<target name="flushAll">
 		<!-- factory 1 -->
 		<java jar="${admin.cli.jar}" fork="true" spawn="false">
