@@ -2,6 +2,7 @@ package sbc.loadbalancing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -13,6 +14,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -48,6 +50,17 @@ public class LoadBalancingRabbitListener extends Thread implements MessageListen
 	 */
 	private void initConnection()	{
 		try {
+			/*
+			String endpoints = "hostname:port,hostname:port";
+			Properties p = new Properties();
+			p.put("com.sun.appserv.iiop.endpoints", endpoints);
+			p.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.enterprise.naming.SerialInitContextFactory");
+			p.put(Context.URL_PKG_PREFIXES, "com.sun.enterprise.naming");
+			p.put(Context.STATE_FACTORIES, "com.sun.corba.ee.impl.presentation.rmi.JNDIStateFactoryImpl");
+			p.put("com.sun.corba.ee.transport.ORBTCPTimeouts", "500:30000:30:999999");
+			ctx = new InitialContext(p);
+			*/
+			
 			ctx = new InitialContext();
 			connectionFactory = (QueueConnectionFactory) ctx.lookup("SBC.Factory");
 			
